@@ -1,10 +1,14 @@
 import dataclasses
 from enum import IntEnum
+import os
 
 from PIL import Image, ImageDraw, ImageFont
 
+from . import __path__
 
 # constants
+
+RESOURCES_DIR = os.path.join(__path__[0], "resources")
 
 COLOR_MAP: dict[int, tuple[int, int, int]] = {
     0: (0, 0, 0),
@@ -41,7 +45,7 @@ class GraphicMode(IntEnum):
         raise ValueError("value not found")
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class FormattedTextSegment:
     text: str
     color: int | None  # one of the 16 color formats 0-16
@@ -67,7 +71,7 @@ class MinecraftTextDraw:
     def __init__(self, image: Image.Image):
         self.image = image
         self.draw = ImageDraw.Draw(image)
-        self.font = ImageFont.truetype("resources/Minecraft.otf", size=18)
+        self.font = ImageFont.truetype(os.path.join(RESOURCES_DIR, "Minecraft.otf"), size=18)
 
         self.color_formats = "0123456789abcdef"
         self.graphic_formats = "lmnok"

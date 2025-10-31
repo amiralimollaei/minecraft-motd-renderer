@@ -1,7 +1,13 @@
+import os
+
 from PIL import Image
 
 from .textdraw import MinecraftTextDraw
 
+
+# constants
+
+RESOURCES_DIR = os.path.join(__path__[0], "resources")
 
 def generate_tiling_background(tile: Image.Image, size: tuple[int, int]) -> Image.Image:
     tile_w, tile_h = tile.size
@@ -14,7 +20,7 @@ def generate_tiling_background(tile: Image.Image, size: tuple[int, int]) -> Imag
 
 
 def generate_tiling_dirt_background(size: tuple[int, int]):
-    dirt_tile = Image.open("resources/texture_dirt.png").convert("RGB")
+    dirt_tile = Image.open(os.path.join(RESOURCES_DIR, "texture_dirt.png")).convert("RGB")
     dirt_tile = Image.eval(dirt_tile, lambda x: x * 0.2)
     dirt_tile = dirt_tile.resize(
         size=tuple(v*4 for v in dirt_tile.size),  # pyright: ignore[reportArgumentType]
@@ -35,7 +41,7 @@ def render_motd(
     if favicon:
         render.paste(favicon, (16, 16))
     else:
-        default_favicon = Image.open("resources/default_favicon.png").convert("RGB")
+        default_favicon = Image.open(os.path.join(RESOURCES_DIR, "default_favicon.png")).convert("RGB")
         default_favicon = default_favicon.resize((64, 64))
         render.paste(default_favicon, (16, 16))
     return render

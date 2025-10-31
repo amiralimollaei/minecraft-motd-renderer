@@ -77,10 +77,7 @@ class MinecraftTextDraw:
         self.graphic_formats = "lmnok"
         self.reset_format = "r"
 
-    def text(self, xy: tuple[int, int], text: str, default_color: tuple[int, int, int] = (85, 85, 85)):
-        assert isinstance(xy[0], int)
-        assert isinstance(xy[1], int)
-
+    def get_formatted_text_segments(self, text):
         segments: list[FormattedTextSegment] = []
         lookbehind_buffer = ""
         current_text = ""
@@ -91,50 +88,44 @@ class MinecraftTextDraw:
             lookbehind_buffer_lower = lookbehind_buffer.lower()
             if len(lookbehind_buffer_lower) == 2 and lookbehind_buffer_lower[0] in ["§", "&"]:
                 format_char = lookbehind_buffer_lower[1]
-                if format_char in self.color_formats:
+                if format_char in self.color_formats + self.graphic_formats + self.reset_format:
                     segments.append(FormattedTextSegment(
                         text=current_text,
                         color=current_color,
                         graphic=current_graphic,
                     ))
                     current_text = ""
+                if format_char in self.color_formats:
                     current_color = self.color_formats.index(format_char)
                     current_graphic = None
                 elif format_char in self.graphic_formats:
-                    segments.append(FormattedTextSegment(
-                        text=current_text,
-                        color=current_color,
-                        graphic=current_graphic,
-                    ))
-                    current_text = ""
                     if current_graphic is None:
                         current_graphic = set()
                     current_graphic.add(GraphicMode.from_int(
                         self.graphic_formats.index(format_char)
                     ))
                 elif format_char in self.reset_format:
-                    segments.append(FormattedTextSegment(
-                        text=current_text,
-                        color=current_color,
-                        graphic=current_graphic,
-                    ))
-                    current_text = ""
                     current_color = None
                     current_graphic = None
                 else:
                     current_text += lookbehind_buffer
-            else:
-                if not lookbehind_buffer_lower[-1] in ["§", "&"]:
-                    current_text += lookbehind_buffer[-1]
+            elif not lookbehind_buffer_lower[-1] in ["§", "&"]:
+                current_text += lookbehind_buffer[-1]
         segments.append(FormattedTextSegment(
             text=current_text,
             color=current_color,
             graphic=current_graphic,
         ))
 
+        return segments
+
+    def text(self, xy: tuple[int, int], text: str, default_color: tuple[int, int, int] = (85, 85, 85)):
+        assert isinstance(xy[0], int)
+        assert isinstance(xy[1], int)
+
         x = xy[0]
         y = xy[1]
-        for segment in segments:
+        for segment in self.get_formatted_text_segments(text):
             for char in segment.text:
                 if char == "\n":
                     y += 18

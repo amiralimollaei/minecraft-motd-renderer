@@ -11,6 +11,7 @@ Renders a minecraft server's motd (message of the day) exactly the same way as i
 
 - Can not render player list
 - Can not render italic text (WIP)
+- Can only render legacy 16 color texts
 
 ## Example
 

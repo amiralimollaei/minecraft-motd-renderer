@@ -77,7 +77,7 @@ class MinecraftTextDraw:
         self.graphic_formats = "lmnok"
         self.reset_format = "r"
 
-    def get_formatted_text_segments(self, text):
+    def get_formatted_text_segments(self, text) -> list[FormattedTextSegment]:
         segments: list[FormattedTextSegment] = []
         lookbehind_buffer = ""
         current_text = ""
@@ -95,18 +95,18 @@ class MinecraftTextDraw:
                         graphic=current_graphic,
                     ))
                     current_text = ""
-                if format_char in self.color_formats:
-                    current_color = self.color_formats.index(format_char)
-                    current_graphic = None
-                elif format_char in self.graphic_formats:
-                    if current_graphic is None:
-                        current_graphic = set()
-                    current_graphic.add(GraphicMode.from_int(
-                        self.graphic_formats.index(format_char)
-                    ))
-                elif format_char in self.reset_format:
-                    current_color = None
-                    current_graphic = None
+                    if format_char in self.color_formats:
+                        current_color = self.color_formats.index(format_char)
+                        current_graphic = None
+                    elif format_char in self.graphic_formats:
+                        if current_graphic is None:
+                            current_graphic = set()
+                        current_graphic.add(GraphicMode.from_int(
+                            self.graphic_formats.index(format_char)
+                        ))
+                    elif format_char in self.reset_format:
+                        current_color = None
+                        current_graphic = None
                 else:
                     current_text += lookbehind_buffer
             elif not lookbehind_buffer_lower[-1] in ["§", "&"]:

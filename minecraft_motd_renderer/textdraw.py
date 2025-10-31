@@ -49,22 +49,22 @@ class GraphicMode(IntEnum):
 class FormattedTextSegment:
     text: str
     color: int | None  # one of the 16 color formats 0-16
-    graphic: set[GraphicMode] | None  # one of the 6 graphic formats
+    graphic: set[GraphicMode]  # one of the 6 graphic formats
 
     def is_bold(self):
-        return self.graphic and GraphicMode.Bold in self.graphic
+        return GraphicMode.Bold in self.graphic
 
     def is_strike(self):
-        return self.graphic and GraphicMode.Strike in self.graphic
+        return GraphicMode.Strike in self.graphic
 
     def is_underline(self):
-        return self.graphic and GraphicMode.Underline in self.graphic
+        return GraphicMode.Underline in self.graphic
 
     def is_italic(self):
-        return self.graphic and GraphicMode.Italic in self.graphic
+        return GraphicMode.Italic in self.graphic
 
     def is_obfuscated(self):
-        return self.graphic and GraphicMode.Obfuscated in self.graphic
+        return GraphicMode.Obfuscated in self.graphic
 
 
 class MinecraftTextDraw:
@@ -82,7 +82,7 @@ class MinecraftTextDraw:
         lookbehind_buffer = ""
         current_text = ""
         current_color = None
-        current_graphic: set[GraphicMode] | None = None
+        current_graphic: set[GraphicMode] = set()
         for char in text:
             lookbehind_buffer = lookbehind_buffer[-1:] + char
             lookbehind_buffer_lower = lookbehind_buffer.lower()
@@ -97,7 +97,7 @@ class MinecraftTextDraw:
                     current_text = ""
                     if format_char in self.color_formats:
                         current_color = self.color_formats.index(format_char)
-                        current_graphic = None
+                        current_graphic = set()
                     elif format_char in self.graphic_formats:
                         if current_graphic is None:
                             current_graphic = set()
@@ -106,7 +106,7 @@ class MinecraftTextDraw:
                         ))
                     elif format_char in self.reset_format:
                         current_color = None
-                        current_graphic = None
+                        current_graphic = set()
                 else:
                     current_text += lookbehind_buffer
             elif not lookbehind_buffer_lower[-1] in ["§", "&"]:

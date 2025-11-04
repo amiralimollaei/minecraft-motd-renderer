@@ -21,7 +21,7 @@ run `python example.py`
 
 ## Credits
 
-- Minecraft font is grabbed from: [IdreesInc/Minecraft-Font](https://github.com/IdreesInc/Minecraft-Font)
+- Minecraft font: <https://minecraft.wiki/w/File:Minecraft.woff2>
 
 ## License
 

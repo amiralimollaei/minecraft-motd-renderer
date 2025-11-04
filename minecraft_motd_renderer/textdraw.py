@@ -71,53 +71,77 @@ class MinecraftTextDraw:
     def __init__(self, image: Image.Image):
         self.image = image
         self.draw = ImageDraw.Draw(image)
-        self.font = ImageFont.truetype(os.path.join(RESOURCES_DIR, "Minecraft.otf"), size=18)
+        self.font = ImageFont.truetype(os.path.join(RESOURCES_DIR, "Minecraft.ttf"), size=16)
 
         self.color_formats = "0123456789abcdef"
         self.graphic_formats = "lmnok"
         self.reset_format = "r"
+        self.all_format_chars = self.color_formats + self.graphic_formats + self.reset_format
 
-    def get_formatted_text_segments(self, text) -> list[FormattedTextSegment]:
+    def get_formatted_text_segments(self, text: str, format_selector: str = "§") -> list[FormattedTextSegment]:
         segments: list[FormattedTextSegment] = []
-        lookbehind_buffer = ""
         current_text = ""
         current_color = None
         current_graphic: set[GraphicMode] = set()
-        for char in text:
-            lookbehind_buffer = lookbehind_buffer[-1:] + char
-            lookbehind_buffer_lower = lookbehind_buffer.lower()
-            if len(lookbehind_buffer_lower) == 2 and lookbehind_buffer_lower[0] in ["§", "&"]:
-                format_char = lookbehind_buffer_lower[1]
-                if format_char in self.color_formats + self.graphic_formats + self.reset_format:
-                    segments.append(FormattedTextSegment(
-                        text=current_text,
-                        color=current_color,
-                        graphic=current_graphic,
-                    ))
-                    current_text = ""
+
+        i = 0
+        n = len(text)
+
+        while i < n:
+            char = text[i]
+
+            # Check for format selector
+            if char == format_selector and i + 1 < n:
+                format_char = text[i + 1].lower()
+
+                if format_char in self.all_format_chars:
+                    # flush accumulated text first
+                    if len(current_text) != 0:
+                        segments.append(
+                            FormattedTextSegment(
+                                text=current_text,
+                                color=current_color,
+                                graphic=set(current_graphic),
+                            )
+                        )
+                        current_text = ""
+
+                    # Apply formatting
                     if format_char in self.color_formats:
                         current_color = self.color_formats.index(format_char)
                         current_graphic = set()
                     elif format_char in self.graphic_formats:
-                        if current_graphic is None:
-                            current_graphic = set()
-                        current_graphic.add(GraphicMode.from_int(
-                            self.graphic_formats.index(format_char)
-                        ))
+                        current_graphic.add(
+                            GraphicMode.from_int(self.graphic_formats.index(format_char))
+                        )
                     elif format_char in self.reset_format:
                         current_color = None
                         current_graphic = set()
+
+                    i += 2
+                    continue
                 else:
-                    current_text += lookbehind_buffer
-            elif not lookbehind_buffer_lower[-1] in ["§", "&"]:
-                current_text += lookbehind_buffer[-1]
-        segments.append(FormattedTextSegment(
-            text=current_text,
-            color=current_color,
-            graphic=current_graphic,
-        ))
+                    # invalid format, treat literal `§` and next char
+                    current_text += char
+                    i += 1
+                    continue
+
+            # Normal char
+            current_text += char
+            i += 1
+
+        # final flush
+        if len(current_text) != 0:
+            segments.append(
+                FormattedTextSegment(
+                    text=current_text,
+                    color=current_color,
+                    graphic=current_graphic,
+                )
+            )
 
         return segments
+
 
     def text(self, xy: tuple[int, int], text: str, default_color: tuple[int, int, int] = (85, 85, 85)):
         assert isinstance(xy[0], int)
@@ -128,11 +152,13 @@ class MinecraftTextDraw:
         for segment in self.get_formatted_text_segments(text):
             for char in segment.text:
                 if char == "\n":
-                    y += 18
+                    y += 18 # font height + 1 GUI pixel
                     x = xy[0]
                     continue
                 if char == " ":
                     x += 8
+                    if segment.is_bold():
+                        x += 2
                     continue
                 # TODO: Support italic text
                 # we could support italic text by rendering each character on a sperate image, then
@@ -156,7 +182,7 @@ class MinecraftTextDraw:
                         color,
                         font=self.font,
                     )
-                x += self.font.getlength(char) - 1
+                x += self.font.getlength(char)
                 if segment.is_strike():
                     self.draw.rectangle((prev_x, y+9, x, y+10), fill=color)
                 if segment.is_underline():

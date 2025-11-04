@@ -39,7 +39,8 @@ def render_motd(
     draw.text((88, 16), name, default_color=(255, 255, 255))
     draw.text((88, 40), text, default_color=(170, 170, 170))
     if favicon:
-        render.paste(favicon, (16, 16))
+        mask = favicon.getchannel("A")
+        render.paste(favicon, (16, 16), mask)
     else:
         default_favicon = Image.open(os.path.join(RESOURCES_DIR, "default_favicon.png")).convert("RGB")
         default_favicon = default_favicon.resize((64, 64))
